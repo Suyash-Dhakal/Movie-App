@@ -1,33 +1,50 @@
 import MovieCard  from '../components/MovieCard'; 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../css/Home.css';
+import { searchMovies, getPopularMovies } from '../services/api';
 
 const Home = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
-    const movies=[
-        {
-            id:1,
-            title:'Movie 1',
-            url:'https://via.placeholder.com/150',
-            release_date:'2023-01-01'
-        },
-        {
-            id:2,
-            title:'Movie 2',
-            url:'https://via.placeholder.com/150',
-            release_date:'2023-02-01'
-        },
-        {
-            id:3,
-            title:'Movie 3',
-            url:'https://via.placeholder.com/150',
-            release_date:'2023-03-01'
+    const [movies, setMovies] = useState([]);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+      const loadPopularMovies = async () => {
+        try{
+          const popularMovies = await getPopularMovies();
+          setMovies(popularMovies);
+        } catch(err){
+          setError("Failed to fetch popular movies");
+          console.error(err);
         }
-    ];
+        finally{
+          setLoading(false);
+        }
+      }
+      loadPopularMovies();
+    }, [])
+    
 
-    const handleSearch=(e)=>{
+    const handleSearch=async (e)=>{
         e.preventDefault();
+        if(!searchQuery.trim()) return;
+        if(loading) return;
+
+        setLoading(true);
+        try{
+          const searchResults = await searchMovies(searchQuery);
+          setMovies(searchResults);
+          setError(null);
+        }
+        catch(err){
+            setError("Failed to fetch movies...");
+            console.error(err);
+        }
+        finally{
+            setLoading(false);
+        }
         setSearchQuery('');
     }
 
@@ -43,12 +60,21 @@ const Home = () => {
             />
             <button className='search-button' type='submit'>Search</button>
         </form>
-      <div className='movies-grid'>
-        {movies.
+
+        {error && <div className='error-message'>{error}</div>}
+
+        {loading ? <div className='loading'>Loading...</div> : 
+        <div className='movies-grid'>
+        {/* {movies.
         filter(movie=>movie.title.toLowerCase().startsWith(searchQuery.toLowerCase()))
         .map(movie => <MovieCard movie={movie} key={movie.id}/>)
+        } */}
+        {movies.
+        map((movie) => (<MovieCard movie={movie} key={movie.id}/>))
         }
       </div>
+        }
+      
     </div>
   )
 }
