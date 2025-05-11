@@ -50,7 +50,7 @@ const Home = () => {
 
   return (
     <div className='home'>
-        <form onSubmit={handleSearch} className='search'>
+        <form onSubmit={handleSearch} className='search-form'>
             <input 
             type="text" 
             placeholder='Search for movies...' 
